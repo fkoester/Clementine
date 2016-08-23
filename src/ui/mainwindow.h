@@ -380,7 +380,6 @@ signals:
   BackgroundStreams* background_streams_;
   IdleHandler* idlehandler_;
   bool inhibit_suspend_while_playing_status_;
-  bool is_suspend_inhibited_;
 };
 
 #endif  // MAINWINDOW_H
