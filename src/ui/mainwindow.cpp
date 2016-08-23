@@ -224,8 +224,7 @@ MainWindow::MainWindow(Application* app, SystemTrayIcon* tray_icon, OSD* osd,
       doubleclick_addmode_(AddBehaviour_Append),
       doubleclick_playmode_(PlayBehaviour_IfStopped),
       menu_playmode_(PlayBehaviour_IfStopped),
-      idlehandler_(IdleHandler::GetSuspend()),
-      is_suspend_inhibited_(false) {
+      idlehandler_(IdleHandler::GetSuspend()) {
   qLog(Debug) << "Starting";
 
   connect(app, SIGNAL(ErrorAdded(QString)), SLOT(ShowErrorDialog(QString)));
@@ -2837,19 +2836,27 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
 }
 
 void MainWindow::InhibitSuspendWhilePlaying(bool status) {
+  if (inhibit_suspend_while_playing_status_ == status) {
+      return;
+  }
+
+  // inhibit suspend only if clementine is playing otherwise it is
+  // already uninhibitted so just set 
+  // inhibit_suspend_while_playing_status_ status to false.
   inhibit_suspend_while_playing_status_ = status;
-  HandleInhibitSuspendWhilePlaying(status);
+  if(app_->player()->GetState() == Engine::Playing) {
+    HandleInhibitSuspendWhilePlaying(status);
+  }
 }
 
 void MainWindow::HandleInhibitSuspendWhilePlaying(bool status) {
+
   if (idlehandler_) {
     if (inhibit_suspend_while_playing_status_ &&
-        !is_suspend_inhibited_ && status) {
+        !idlehandler_->Isinhibited() && status) {
       idlehandler_->Inhibit("Clementine is playing");
-      is_suspend_inhibited_ = idlehandler_->Isinhibited();
-    } else if (is_suspend_inhibited_ && !status){
+    } else if (idlehandler_->Isinhibited() && !status){
       idlehandler_->Uninhibit();
-      is_suspend_inhibited_ = idlehandler_->Isinhibited();
     }
   }
 }
